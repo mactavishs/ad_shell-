@@ -3,7 +3,7 @@
 # Version Number:1.00
 # Type:backup
 # Language: bash shell
-# Date: 2016-01-10
+# Date: 2016-02-01
 # Author:maxpayne
 
 
@@ -43,4 +43,12 @@ do
 	local_dir="/data8/${ip}/${time}/"
 	mkdir -p $local_dir
 	rsync -av  ${ip}:${src_log_filename}  $local_dir
+	[[ "$?" -ne 0 ]] &&   /opt/script/shell/log_backup/send_mail.sh "${ip}:数据传输失败" || /opt/script/shell/log_backup/send_mail.sh "${ip}:${1}日志数据传输成功" #若数据传输失败或成功,则发邮件
+	ssh ${ip} "md5sum ${ip}${src_log_filename}"  >/opt/script/shell/log_backup/${1}.txt 
+	md5sum "${local_dir}${1}*" > /opt/script/shell/log_backup/local${1}.txt
+	[[ "`md5sum /opt/script/shell/log_backup/${1}.txt`" == "`md5sum  /opt/script/shell/log_backup/local${1}.txt`" ]] && /opt/script/shell/log_backup/send_mail.sh "${ip}:${1}md5校验成功" || /opt/script/shell/log_backup/send_mail.sh "${ip}:${1}md5校验失败" #校验数据 
+
+	
 done
+
+
